@@ -22,13 +22,13 @@ app.MapGet("/users", () =>
 
 app.MapGet("/users/{id:int}", (int id) =>
 {
-    var user = users.FirstOrDefault(u => u.Id == id);
+    var user = users.FirstOrDefault(Users => Users.Id == id);
     return user is null ? Results.NotFound() : Results.Ok(user);
 });
 
 app.MapPut("/users/{id:int}", (int id, User updated) =>
 {
-    var existing = users.FirstOrDefault(u => u.Id == id);
+    var existing = users.FirstOrDefault(Users => Users.Id == id);
     if (existing is null) return Results.NotFound();
 
     existing.FirstName = updated.FirstName;
@@ -40,7 +40,7 @@ app.MapPut("/users/{id:int}", (int id, User updated) =>
 
 app.MapDelete("/users/{id:int}", (int id) =>
 {
-    var user = users.FirstOrDefault(u => u.Id == id);
+    var user = users.FirstOrDefault(Users => Users.Id == id);
     if (user is null) return Results.NotFound();
 
     users.Remove(user);
