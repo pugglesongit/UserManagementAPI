@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
+
+const string ApiToken = "super-secret-token123";
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +20,43 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//Global request/response logging
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"[REQUEST] {context.Request.Method} {context.Request.Path} at {DateTime.Now}");
+    await next();
+    Console.WriteLine($"[RESPONSE] {context.Response.StatusCode} for {context.Request.Method} {context.Request.Path}");
+});
+
+//global error handling, removes need for the try-catch block
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERROR] {ex.Message}");
+
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { error = "An unexpected error occured.", detail = ex.Message });
+    }
+});
+
+//Token-based security
+app.Use(async (context, next) =>
+{
+    if (!context.Request.Headers.TryGetValue("X-API-Token", out var token) || token != ApiToken)
+    {
+        context.Response.StatusCode = 401;
+        await context.Response.WriteAsJsonAsync(new {error = "Unauthorised: Missing or Invalid API token"});
+        return;
+    }
+
+    await next();
+});
 
 var users = new List<User>();
 var idCounter = 0;
@@ -106,9 +146,7 @@ app.MapPut("/users/{id}", (int id, User updated) =>
 // Delete a user
 app.MapDelete("/users/{id}", (int id) =>
 {
-    try
-    {    
-        var user = FindUser(id);
+    var user = FindUser(id);
         
         if (user is null)
         return Results.NotFound("User not found");
@@ -116,12 +154,6 @@ app.MapDelete("/users/{id}", (int id) =>
         users.Remove(user); //removes the user from the list
         Console.WriteLine($"User deleted: {user.FirstName} {user.LastName} {user.Email} {user.Id}");
         return Results.Ok(new { message = "User Deleted"}); 
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error deleting user: {ex.Message}");
-        return Results.Problem("An unexpected error occured while deleting the user.");
-    }
 });
 
 app.Run();
