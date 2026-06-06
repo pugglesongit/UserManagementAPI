@@ -1,0 +1,1 @@
+This contains debugging with copilot help. Co-pilot helped debug the project and I asked it to explain what would happen if things were left as they were for future understanding as well as why it suggested the fix to begin with.
