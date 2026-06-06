@@ -30,11 +30,13 @@ app.MapPost("/users", (User user) =>
 {
     user.Id = idCounter++; //Assign a new ID to a user and increases the counter
     users.Add(user);
+    Console.WriteLine("User created: " + user.FirstName + " " + user.LastName + " " + user.Email + " " + user.Id,"");
     return Results.Created($"/users/{user.Id}", user);
 });
 
 app.MapGet("/users", () =>
 {
+    Console.WriteLine("Here are the current users");
     return Results.Ok(users);
 });
 
@@ -46,6 +48,7 @@ app.MapGet("/users/{id}", (int id) =>
     }
     else
     {
+        Console.WriteLine("User found");
         return Results.Ok(users[id]);
     }
 });
@@ -62,6 +65,7 @@ app.MapPut("/users/{id}", (int id, User updated) =>
     existing.LastName = updated.LastName;
     existing.Email = updated.Email;
 
+    Console.WriteLine("User updated: " + existing.FirstName + " " + existing.LastName + " " + existing.Email + " " + existing.Id,"");
     return Results.Ok(existing);
 });
 
@@ -73,6 +77,7 @@ app.MapDelete("/users/{id}", (int id) =>
         return Results.NotFound();
     }
 
+    Console.WriteLine("User deleted: " + user.FirstName + " " + user.LastName + " " + user.Email + " " + user.Id, "");
     users.Remove(user); //removes the user from the list
     return Results.NoContent();
 });
