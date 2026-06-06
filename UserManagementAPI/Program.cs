@@ -21,6 +21,27 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//Token-based security
+app.Use(async (context, next) =>
+{
+    if (context.Request.Headers.TryGetValue("X-API-TOKEN", out var token))
+    {
+        Console.WriteLine($"[TOKEN RECEIVED] {token}");
+    }
+    else
+    {
+        Console.WriteLine("[TOKEN MISSING]");
+    }
+    if (!context.Request.Headers.TryGetValue("X-API-TOKEN", out token) || token != ApiToken)
+    {
+        context.Response.StatusCode = 401;
+        await context.Response.WriteAsJsonAsync(new {error = "Unauthorised: Missing or Invalid API token"});
+        return;
+    }
+
+    await next();
+});
+
 //Global request/response logging
 app.Use(async (context, next) =>
 {
@@ -43,19 +64,6 @@ app.Use(async (context, next) =>
         context.Response.StatusCode = 500;
         await context.Response.WriteAsJsonAsync(new { error = "An unexpected error occured.", detail = ex.Message });
     }
-});
-
-//Token-based security
-app.Use(async (context, next) =>
-{
-    if (!context.Request.Headers.TryGetValue("X-API-Token", out var token) || token != ApiToken)
-    {
-        context.Response.StatusCode = 401;
-        await context.Response.WriteAsJsonAsync(new {error = "Unauthorised: Missing or Invalid API token"});
-        return;
-    }
-
-    await next();
 });
 
 var users = new List<User>();
