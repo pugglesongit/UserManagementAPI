@@ -35,7 +35,4 @@ Content-Type: application/json
 
 ### Delete a user by ID
 DELETE http://localhost:5281/users/1
-Content-Type: application/json 
-{
-  "User Deleted"
-}
+Content-Type: application/json
